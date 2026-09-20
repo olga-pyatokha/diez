@@ -72,6 +72,8 @@ header{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
 .gloss{background:var(--panel2);border-left:3px solid var(--line);border-radius:0 10px 10px 0;
   padding:11px 13px;font-size:14px;color:var(--dim)}
 details{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
+.tr-one{margin-top:11px;padding-top:9px}
+.tr-one summary{font-size:13.5px}
 summary{cursor:pointer;color:var(--blue);font-size:14.5px;list-style:none}
 summary::-webkit-details-marker{display:none}
 summary::before{content:"▸ ";}
@@ -255,12 +257,14 @@ function wordsHTML(l){
   </div>`:''}`;
 }
 function readHTML(l){
-  return `<div class="card passage">
-    ${l.passage_html.map(p=>`<p>${p}</p>`).join('')}
-  </div>
-  <div class="gloss"><b>Apoyo, no se registra:</b> ${l.glosses.map(esc).join(' · ')}</div>
-  <details><summary>Traducción</summary>
-    ${l.translation.map(p=>`<p class="sub" style="font-size:15px">${esc(p)}</p>`).join('')}</details>
+  // Translation sits under its own paragraph, collapsed. Close enough to check
+  // yourself while it is fresh, hidden enough that the reading still happens.
+  return `<div class="gloss" style="margin-bottom:12px"><b>Apoyo, no se registra:</b> ${l.glosses.map(esc).join(' · ')}</div>
+  ${l.passage_html.map((par,i)=>`<div class="card passage">
+    <p>${par}</p>
+    <details class="tr-one"><summary>Traducción</summary>
+      <p class="sub" style="font-size:15px;margin:8px 0 0">${esc(l.translation[i]||'')}</p></details>
+  </div>`).join('')}
   <details><summary>Recordar las palabras</summary>
     ${l.new_words.map(w=>`<p class="sub" style="font-size:15px"><b class="tw">${esc(w.word)}</b> — ${esc(w.en)}</p>`).join('')}</details>`;
 }
