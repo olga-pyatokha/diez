@@ -88,6 +88,11 @@ details[open] summary::before{content:"▾ ";}
 .reveal .mean{font:600 20px Georgia,serif;color:var(--amber);margin-bottom:2px}
 .reveal .tr{color:var(--dim);font-size:14.5px;margin-bottom:10px}
 .hook{background:var(--panel2);border-radius:10px;padding:11px 12px;font-size:14px;color:#cfc6bb}
+.rline{display:flex;gap:14px;align-items:baseline;justify-content:space-between;
+  padding:8px 0;border-top:1px solid var(--line)}
+.rline:first-of-type{border-top:0;padding-top:2px}
+.rline b{font:600 16.5px Georgia,serif;flex:0 0 auto}
+.rline span{color:var(--dim);font-size:14.5px;text-align:right}
 .wline{display:flex;align-items:center;gap:9px;justify-content:space-between}
 .wline b{font:600 21px Georgia,serif}
 .wmean{color:var(--ink);font-size:15.5px;margin-top:2px}
@@ -253,7 +258,8 @@ function wordsHTML(l){
   </div>`).join('')}
   ${l.review_cards.length?`<div class="card">
     <h2>Y vuelven</h2>
-    <p class="note">${l.review_cards.map(c=>`<b class="rw">${esc(c.word)}</b>`).join(' · ')}</p>
+    ${l.review_cards.map(c=>`<div class="rline">
+      <b class="rw">${esc(c.word)}</b><span>${esc(c.en)}</span></div>`).join('')}
   </div>`:''}`;
 }
 function readHTML(l){
