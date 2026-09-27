@@ -1,7 +1,12 @@
-# Diez
+# Diez · segunda serie
 
-Ten Spanish reading lessons, ten minutes each. Built to be installed on a phone
-and worked through whenever, offline.
+Ten Spanish reading lessons, ten minutes each, plus an eleventh entry that
+reviews all sixty new words as one shuffled flashcard deck. Built to be
+installed on a phone and worked through whenever, offline.
+
+The same page is also published as a claude.ai Artifact, where every answer
+syncs to the artifact's database for grading. This GitHub copy keeps progress
+on the device unless a GitHub token is pasted into Ajustes.
 
 **https://olga-pyatokha.github.io/diez/**
 
