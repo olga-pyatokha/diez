@@ -388,7 +388,7 @@ function deckHTML(){
   const cs=deckOrder(), st=S.deck, done=Object.keys(st.cards).length;
   const head=`<header><h1>${esc(PKG.deck.title)}</h1><button data-nav="home" class="sub">cerrar ✕</button></header>
   <p class="sub">Las ${cs.length} palabras nuevas de las diez lecciones, en un orden distinto cada vuelta.
-  Escribe el inglés, mira la respuesta, marca si la tenías. Vuelta ${st.pass} · ${done}/${cs.length}</p>`;
+  Lee la palabra, dale la vuelta, marca si la sabías. Vuelta ${st.pass} · ${done}/${cs.length}</p>`;
   let i = cs.findIndex(c=>!st.cards[c.k]);
   if(view.forceCard!=null) i=view.forceCard;
   if(i<0){
@@ -399,10 +399,11 @@ function deckHTML(){
       <button class="btn ghost" data-nav="home">Volver al índice</button></div>
       ${cs.map((c,j)=>{const a=st.cards[c.k]||{};
         return `<button class="lesson" data-recard="${j}"><span class="num">${a.rating==='si'?'✓':'·'}</span>
-        <span class="t"><b>${esc(c.word)}</b><span>${esc(a.en||'—')} · lección ${c.lesson}</span></span><span class="chev">›</span></button>`;}).join('')}`;
+        <span class="t"><b>${esc(c.word)}</b><span>${markText(a)} · lección ${c.lesson}</span></span><span class="chev">›</span></button>`;}).join('')}`;
   }
   return head+cardMarkup(cs[i], i, cs.length, st.cards[cs[i].k]||{}, `lección ${cs[i].lesson}`);
 }
+function markText(a){ return a.rating==='si'?'la sabía':a.rating==='no'?'no la sabía':(a.en||'—'); }
 
 /* ---------- home ---------- */
 function homeHTML(){
@@ -473,8 +474,8 @@ function lessonHTML(){
   return head+clozeHTML(l);
 }
 
-// Study step. Deliberately no input: meeting the word correctly comes first,
-// retrieval comes later in Tarjetas, where a wrong answer gets corrected.
+// Study step. Meeting the word correctly comes first; Tarjetas then flips each
+// one and she marks whether she had it. Typed retrieval lives only in Huecos.
 function wordsHTML(l){
   return `<p class="sub">Léelas antes del texto. Sin escribir nada — solo para
   encontrarlas ya sabidas cuando aparezcan.</p>
@@ -514,32 +515,28 @@ function cardHTML(l,cs){
       <button class="btn ghost" data-recard="0">Repetir desde el principio</button></div>
       ${cs.map((c,j)=>{const a=st.cards[c.k]||{};
         return `<button class="lesson" data-recard="${j}"><span class="num">${a.rating==='si'?'✓':'·'}</span>
-        <span class="t"><b>${esc(c.word)}</b><span>${esc(a.en||'—')}</span></span><span class="chev">›</span></button>`;}).join('')}`;
+        <span class="t"><b>${esc(c.word)}</b><span>${markText(a)}</span></span><span class="chev">›</span></button>`;}).join('')}`;
   }
   const c=cs[i];
   return cardMarkup(c, i, cs.length, st.cards[c.k]||{});
 }
-/* One card, shared by the lesson step and the deck. Reveal is locked until
-   something is typed; sí/no is a hint, the typed text is what gets graded. */
+/* One flashcard, shared by the lesson step and the deck. Front: the word and
+   its sentence. Tap to flip; the back carries meaning, translation and hook,
+   then a self-mark. Nothing is typed — the mark is her own read, not a grade. */
 function cardMarkup(c, i, total, prev, label){
   return `<div class="prog"><i style="width:${Math.round(i/total*100)}%"></i></div>
   <div class="card" id="cardbox" data-k="${c.k}" data-i="${i}">
     <span class="tag ${c.kind==='new'?'new':'rev'}">${label||(c.kind==='new'?'nueva':'repaso')} · ${i+1}/${total}</span>
-    ${c.kind==='new'
-      ? `<p class="qes">${c.es_html}</p>`
-      : `<p class="qes" style="font-size:24px"><b class="tw">${esc(c.word)}</b></p>
-         <p class="sub" style="font-size:15px;margin:-6px 0 14px">${c.es_html}</p>`}
-    <input type="text" id="ans" placeholder="En inglés…" autocomplete="off"
-      autocorrect="off" autocapitalize="none" spellcheck="false" value="${esc(prev.en||'')}">
-    <button class="btn" id="show" disabled>Ver respuesta</button>
+    <p class="qes" style="font-size:28px;margin-bottom:6px"><b class="tw">${esc(c.word)}</b></p>
+    <p class="sub" style="font-size:15.5px;margin:0 0 14px">${c.es_html}</p>
+    <button class="btn" id="show">Dar la vuelta</button>
     <div id="rev" class="reveal hide">
       <div class="mean">${esc(c.word)} — ${esc(c.en)}</div>
       <div class="tr">${esc(c.en_sentence)}</div>
       <div class="hook">${esc(c.hook)}</div>
-      <div class="yours">Escribiste: <b id="yours"></b></div>
       <div class="mark">
-        <button class="si" data-rate="si">Lo tenía</button>
-        <button class="no" data-rate="no">No lo tenía</button>
+        <button class="si" data-rate="si">La sabía</button>
+        <button class="no" data-rate="no">No la sabía</button>
       </div>
     </div>
   </div>`;
@@ -745,15 +742,14 @@ function wire(){
 
   const box=$('#cardbox');
   if(box){
-    const ans=$('#ans'), show=$('#show'), rev=$('#rev');
-    const sync=()=>{ show.disabled = ans.value.trim().length===0; };
-    ans.oninput=sync; sync(); setTimeout(()=>ans.focus(),80);
-    ans.onkeydown=e=>{ if(e.key==='Enter' && !show.disabled) show.click(); };
-    show.onclick=()=>{ show.classList.add('hide'); rev.classList.remove('hide');
-      $('#yours').textContent=ans.value.trim(); ans.blur();
-      rev.scrollIntoView({behavior:'smooth',block:'nearest'}); };
+    const show=$('#show'), rev=$('#rev');
+    const flip=()=>{ if(!show.classList.contains('hide')){ show.classList.add('hide'); rev.classList.remove('hide');
+      rev.scrollIntoView({behavior:'smooth',block:'nearest'}); } };
+    show.onclick=flip;
+    // The whole front of the card flips it, so a tap anywhere works on the phone.
+    box.onclick=e=>{ if(!e.target.closest('[data-rate]') && !e.target.closest('#rev')) flip(); };
     document.querySelectorAll('[data-rate]').forEach(b=>b.onclick=()=>{
-      const k=box.dataset.k, a={en:ans.value.trim(), rating:b.dataset.rate, at:today()};
+      const k=box.dataset.k, a={en:null, rating:b.dataset.rate, at:today()};
       if(view.name==='deck'){ const c=deckCard(k); if(c) a.lesson=c.lesson; S.deck.cards[k]=a; touchDay(); go({name:'deck'}); }
       else { L(view.n).cards[k]=a; touchDay(); go({name:'lesson',n:view.n,step:'cards'}); } });
   }
