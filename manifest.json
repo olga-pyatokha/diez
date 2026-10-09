@@ -1,7 +1,7 @@
 {
   "name": "Diez · Español",
   "short_name": "Diez",
-  "description": "Diez lecciones de lectura, diez minutos cada una.",
+  "description": "Veinte lecciones de lectura, diez minutos cada una.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
